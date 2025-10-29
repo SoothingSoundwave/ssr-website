@@ -1,0 +1,458 @@
+================================================================================
+SOOTHING SOUNDWAVE RECORDS - PROJECT SPECIFICATIONS
+================================================================================
+Last Updated: October 27, 2025
+Version: 2.0 (Cleaned for Project Knowledge)
+
+Tech Stack: Next.js 15, React 19, TypeScript, Tailwind CSS, Supabase, Vercel
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+Label Name: Soothing Soundwave Records
+Specialization: Relaxing and chill music genres
+
+Core Features:
+  - Showcase releases and playlists (Spotify API)
+  - Video gallery (YouTube API)
+  - Demo submissions via Release Organizer
+  - Merchandise integration (Zazzle)
+  - Custom vinyl ordering system
+  - Newsletter signup
+  - Contact form
+  - Admin dashboard
+
+Target Audience: Music lovers, artists, playlist curators, vinyl collectors
+
+================================================================================
+2. SITE STRUCTURE
+================================================================================
+
+PUBLIC PAGES:
+  - Homepage (hero video, featured player, releases, videos, newsletter)
+  - Releases (grid view, sorting, filtering)
+  - Playlists (Spotify playlists display)
+  - Videos (YouTube videos grid)
+  - Submit (links to Release Organizer)
+  - Merch (Zazzle store integration)
+  - Custom Vinyl (order custom vinyl from catalog)
+  - Contact (form submission)
+
+ADMIN PAGES (/admin):
+  - Dashboard (stats overview)
+  - Contacts (form submissions management)
+  - Newsletter (subscriber management)
+  - Vinyl Orders (order tracking)
+  - Analytics (page views, traffic)
+
+================================================================================
+3. TECH STACK & KEY DEPENDENCIES
+================================================================================
+
+Core Framework:
+  - Next.js 15 (App Router, Turbopack)
+  - React 19
+  - TypeScript
+  - Tailwind CSS 3.x
+
+Backend & Database:
+  - Supabase (PostgreSQL database + Storage)
+  - Next.js API Routes
+
+Key Packages:
+  - @supabase/supabase-js@2.x
+  - @supabase/auth-helpers-nextjs
+  - resend@2.x (email)
+  - react-hook-form + zod (forms)
+  - lucide-react (icons)
+  - recharts (admin charts)
+  - date-fns, clsx, tailwind-merge
+
+Optional:
+  - shadcn/ui components (admin dashboard)
+
+================================================================================
+4. DATABASE SCHEMA (SUPABASE)
+================================================================================
+
+TABLE: contact_submissions
+  - id (UUID, primary key)
+  - name, email, subject, message (TEXT)
+  - status (new/read/replied)
+  - submitted_at, read_at, replied_at (TIMESTAMP)
+  - ip_address, user_agent (TEXT)
+
+TABLE: newsletter_signups
+  - id (UUID, primary key)
+  - email (TEXT, unique), name (TEXT)
+  - status (active/unsubscribed)
+  - source (TEXT) - where they signed up
+  - signed_up_at, unsubscribed_at (TIMESTAMP)
+  - ip_address (TEXT)
+
+TABLE: vinyl_orders
+  - id (UUID, primary key)
+  - order_number (TEXT, unique) - auto-generated "VIN-YYYY-####"
+  - customer_name, customer_email, customer_phone (TEXT)
+  - shipping_address (JSONB)
+  - vinyl_size (7"/10"/12"), vinyl_color, vinyl_speed (TEXT)
+  - tracks (JSONB) - array of track objects
+  - total_duration (INTEGER - seconds)
+  - artwork_url, artwork_type, template_id (TEXT)
+  - base_price, shipping_cost, total_price (NUMERIC)
+  - status (pending/review/approved/payment_received/processing/shipped/completed/cancelled)
+  - customer_notes, admin_notes (TEXT)
+  - elastic_stage_order_id, tracking_number (TEXT)
+  - created_at, approved_at, shipped_at, completed_at (TIMESTAMP)
+
+SUPABASE STORAGE BUCKETS:
+  - vinyl-artwork (Private) - customer uploaded artwork
+  - hero-videos (Public) - contains hero background video
+    URL: https://ocfefvcylrzsjuhcqxlu.supabase.co/storage/v1/object/public/hero-videos/ssr-hero-vid.mp4
+
+================================================================================
+5. API INTEGRATIONS
+================================================================================
+
+SPOTIFY WEB API:
+  - Authentication: Client Credentials flow
+  - Endpoints Used:
+    * /artists/{id}/albums - Get all releases
+    * /users/{id}/playlists - Get public playlists
+    * /playlists/{id} - Get playlist details
+    * /tracks/{id} - Get track details
+  - Caching: 1 hour for releases, 6 hours for playlists
+  - Rate Limit: 180 requests/minute
+
+YOUTUBE DATA API V3:
+  - Authentication: API key
+  - Endpoints Used:
+    * /search - Get channel videos
+    * /videos - Get video details
+  - Caching: 24 hours
+  - Quota: 10,000 units/day (free tier)
+
+RESEND API:
+  - Email notifications:
+    * Contact form submissions
+    * Vinyl order confirmations
+    * Newsletter welcome (optional)
+    * Order status updates
+  - Free tier: 100 emails/day, 3,000/month
+
+EXTERNAL SERVICES:
+  - Zazzle (Merch) - Direct links to products
+  - Release Organizer - Demo submission platform
+  - Elastic Stage - Vinyl pressing & fulfillment (manual MVP)
+  - PayPal - Vinyl order payments (manual MVP)
+
+================================================================================
+6. DESIGN SYSTEM
+================================================================================
+
+COLOR PALETTE (Dark Theme):
+
+Backgrounds:
+  --bg-primary: #0A0E14
+  --bg-secondary: #161B22
+  --bg-elevated: #1F2937
+
+Text:
+  --text-primary: #F9FAFB
+  --text-secondary: #E5E7EB
+  --text-tertiary: #9CA3AF
+
+Accents:
+  --accent-purple: #C879FF (Primary CTA)
+  --accent-pink: #FF70A6 (Secondary)
+  --accent-coral: #FF9B85 (Tertiary)
+
+Borders:
+  --border-subtle: #374151
+  --border-medium: #4B5563
+
+States:
+  --hover-purple: #B066E6
+  --hover-pink: #E65C94
+  --success: #10B981
+  --error: #EF4444
+  --warning: #F59E0B
+
+TYPOGRAPHY:
+
+Fonts:
+  --font-body: 'Montserrat', sans-serif
+  --font-heading: 'Poppins', sans-serif
+
+Available Weights (ALL weights 100-900 + italics available):
+  - Montserrat: Use 300 (Light), 400 (Regular), 500 (Medium), 700 (Bold)
+  - Poppins: Use 600 (Semibold), 700 (Bold)
+
+Font Location: /public/fonts/
+  - Complete Montserrat family (Thin to Black, + italics)
+  - Complete Poppins family (Thin to Black, + italics)
+
+Setup:
+  1. Create src/app/fonts.css with @font-face declarations
+  2. Import in src/app/layout.tsx
+  3. Configure Tailwind:
+     fontFamily: {
+       sans: ['Montserrat', 'system-ui'],
+       heading: ['Poppins', 'system-ui']
+     }
+
+Font Sizes:
+  - xs: 0.75rem, sm: 0.875rem, base: 1rem
+  - lg: 1.125rem, xl: 1.25rem, 2xl: 1.5rem
+  - 3xl: 1.875rem, 4xl: 2.25rem, 5xl: 3rem
+
+SPACING & STYLES:
+
+Border Radius: sm(4px), md(8px), lg(12px), xl(16px), full(9999px)
+
+Shadows:
+  - sm: 0 1px 2px rgba(0,0,0,0.05)
+  - md: 0 4px 6px rgba(0,0,0,0.1)
+  - lg: 0 10px 15px rgba(0,0,0,0.15)
+  - xl: 0 20px 25px rgba(0,0,0,0.2)
+  - glow-purple: 0 0 20px rgba(200,121,255,0.3)
+
+Animations:
+  - duration-fast: 150ms
+  - duration-normal: 300ms
+  - duration-slow: 500ms
+  - ease-in-out, ease-out, ease-bounce
+
+COMPONENT ARCHITECTURE:
+  - Each page section = separate component file
+  - File size target: 100-300 lines per component
+  - Sub-components for complex sections
+  - Naming: PascalCase, descriptive (HeroSection.tsx, not Hero.tsx)
+
+================================================================================
+7. KEY FEATURES DETAIL
+================================================================================
+
+HERO SECTION:
+  - Video URL: https://ocfefvcylrzsjuhcqxlu.supabase.co/storage/v1/object/public/hero-videos/ssr-hero-vid.mp4
+  - Video: 808kb, autoplay, muted, loop
+  - Overlay animation: 2s fade-in
+  - Logo animation: 1s fade-in (delayed 1s)
+  - Fallback: Static image for slow connections
+
+SPOTIFY PLAYER:
+  - Embedded iframe player
+  - Shows first track from "Releases Playlist"
+  - User-initiated play (no autoplay)
+
+CUSTOM VINYL PAGE:
+  - 4-step process explanation
+  - Pricing: 7"/10"/12" options (TBD with Elastic Stage)
+  - Template downloads: .PSD, .AI, .XCF, PDF guidelines
+  - Pre-made artwork gallery
+  - Contact form with file upload
+  - FAQ section
+  
+  Current Process (MVP):
+    * Customer emails with track links + artwork
+    * Manual review and verification
+    * PayPal invoice sent
+    * Order placed with Elastic Stage
+    * Direct shipping to customer
+
+  Phase 2 (Future):
+    * Interactive track selector
+    * Real-time duration calculator
+    * Visual vinyl builder
+    * Stripe payment integration
+    * Automated order management
+
+ADMIN DASHBOARD:
+  - Simple password auth (MVP)
+  - Stats cards (contacts, signups, orders, views)
+  - Data tables with sorting/filtering
+  - Contact management (new/read/replied status)
+  - Newsletter subscriber management + CSV export
+  - Vinyl order tracking + status updates
+  - Analytics (page views, traffic sources)
+
+================================================================================
+8. FOLDER STRUCTURE
+================================================================================
+
+Key Directories:
+
+public/
+  ├── fonts/ (Montserrat + Poppins WOFF2 files)
+  ├── downloads/ (vinyl templates: .PSD, .AI, .XCF, PDF)
+  ├── logo/ (SVG variants)
+  └── images/ (placeholders)
+
+src/
+  ├── app/ (Next.js 15 App Router)
+  │   ├── layout.tsx, page.tsx, fonts.css, globals.css
+  │   ├── about/, releases/, playlists/, videos/
+  │   ├── submit/, merch/, custom-vinyl/, contact/
+  │   ├── admin/ (login, dashboard, contacts, newsletter, vinyl-orders, analytics)
+  │   └── api/ (contact, newsletter, vinyl-order, admin, spotify, youtube)
+  │
+  ├── components/
+  │   ├── layout/ (Header, Footer, Navigation)
+  │   ├── home/ (HeroSection, AudioPlayer, ReleasesGrid, etc.)
+  │   ├── releases/, playlists/, videos/
+  │   ├── forms/ (ContactForm, NewsletterForm, VinylOrderForm)
+  │   ├── admin/ (Sidebar, TopBar, StatsCard, DataTable, charts/, modals/)
+  │   └── ui/ (shadcn/ui components)
+  │
+  ├── lib/
+  │   ├── supabase/ (client.ts, server.ts, middleware.ts)
+  │   ├── api/ (spotify.ts, youtube.ts, resend.ts)
+  │   └── utils/ (cn.ts, formatDate.ts, validation.ts)
+  │
+  ├── types/ (database.types.ts, spotify.types.ts, etc.)
+  └── hooks/ (useSpotify, useYoutube, useSupabase, useAuth)
+
+================================================================================
+9. ENVIRONMENT VARIABLES
+================================================================================
+
+Required Variables (.env.local):
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Spotify
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+SPOTIFY_ARTIST_ID=
+SPOTIFY_USER_ID=
+
+# YouTube
+YOUTUBE_API_KEY=
+YOUTUBE_CHANNEL_ID=
+
+# Resend
+RESEND_API_KEY=
+
+# Admin (MVP)
+ADMIN_PASSWORD=
+
+# Email Addresses
+CONTACT_EMAIL=contact@soothingsoundwave.com
+VINYL_EMAIL=vinyl@soothingsoundwave.com
+NEWSLETTER_EMAIL=newsletter@soothingsoundwave.com
+
+# Site
+NEXT_PUBLIC_SITE_URL=
+
+================================================================================
+10. DEPLOYMENT
+================================================================================
+
+HOSTING: Vercel (Recommended)
+  - Free tier: Unlimited deployments, 100GB bandwidth/month
+  - Pro: $20/month (if needed)
+
+DATABASE: Supabase
+  - Free tier: 500MB database, 1GB storage
+  - Pro: $25/month (if needed)
+
+ESTIMATED COSTS:
+  - Launch (MVP): ~$1/month (domain only)
+  - After growth: ~$30-90/month (hosting + database + CDN + email)
+
+================================================================================
+11. FUTURE PHASES
+================================================================================
+
+PHASE 2 (3-6 months): Automated Music Sales
+  - Stripe integration
+  - Bunny CDN for audio hosting
+  - Digital download system
+  - Shopping cart functionality
+
+PHASE 3 (6-12 months): Enhanced Vinyl Builder
+  - Interactive track selector
+  - Real-time duration calculator
+  - Visual vinyl mockup
+  - Automated order fulfillment
+  - Elastic Stage API integration
+
+PHASE 4 (12+ months): Community Features
+  - User accounts and profiles
+  - Comments and ratings
+  - User playlists
+  - Blog/news section
+
+PHASE 5 (18+ months): Advanced Features
+  - Mobile app
+  - Integrated music player
+  - Multi-language support
+  - PWA features
+
+================================================================================
+12. KEY ARCHITECTURE DECISIONS
+================================================================================
+
+✓ Next.js 15 with App Router (not Pages Router)
+✓ TypeScript for type safety
+✓ Component-based architecture (sections as separate files)
+✓ Supabase for database and storage
+✓ Custom fonts via @font-face (complete families available)
+✓ Hero video on Supabase Storage (not local /public)
+✓ Server Components by default, Client Components when needed
+✓ API routes for backend logic
+✓ Manual vinyl orders (MVP), automation in Phase 2
+✓ Discord for community (not building chat rooms)
+
+================================================================================
+QUICK START CHECKLIST
+================================================================================
+
+□ Initialize Next.js 15 project with TypeScript + Tailwind
+□ Install dependencies (@supabase/supabase-js, resend, etc.)
+□ Set up fonts in /public/fonts/ and create fonts.css
+□ Configure Tailwind with custom colors and fonts
+□ Create Supabase project and database tables
+□ Set up Spotify, YouTube, and Resend APIs
+□ Create environment variables (.env.local)
+□ Build folder structure (use setup script if available)
+□ Develop homepage with hero video
+□ Connect API integrations
+□ Build admin dashboard
+□ Test all features locally
+□ Deploy to Vercel
+□ Configure custom domain
+□ Launch!
+
+================================================================================
+NOTES FOR CLAUDE
+================================================================================
+
+When starting a new chat about this project:
+  - This is a Next.js 15 + React 19 + TypeScript project
+  - Use App Router (not Pages Router)
+  - Each section should be a separate component file (100-300 lines)
+  - All custom fonts are available in /public/fonts/
+  - Hero video is on Supabase Storage (use provided URL)
+  - Admin uses simple password auth (MVP)
+  - Vinyl orders are manual via email (MVP)
+  - Follow the component-based architecture
+  - Keep files under 300 lines
+  - Use TypeScript for all new files
+  - Follow the established design system (colors, fonts, spacing)
+
+Key URLs:
+  - Hero Video: https://ocfefvcylrzsjuhcqxlu.supabase.co/storage/v1/object/public/hero-videos/ssr-hero-vid.mp4
+  - Release Organizer: [User will provide]
+  - Zazzle Store: [User will provide]
+
+================================================================================
+END OF PROJECT SPECIFICATIONS
+================================================================================
+
+Last Updated: October 27, 2025
+Version: 2.0 (Cleaned for Project Knowledge)

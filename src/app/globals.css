@@ -1,0 +1,102 @@
+/* globals.css */
+/* Path: /src/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Background Colors */
+  --bg-primary: #0A0E14;
+  --bg-secondary: #161B22;
+  --bg-elevated: #1F2937;
+  
+  /* Text Colors */
+  --text-primary: #F9FAFB;
+  --text-secondary: #E5E7EB;
+  --text-tertiary: #9CA3AF;
+  
+  /* Accent Colors */
+  --accent-purple: #C879FF;
+  --accent-pink: #FF70A6;
+  --accent-coral: #FF9B85;
+  
+  /* Border Colors */
+  --border-subtle: #374151;
+  --border-medium: #4B5563;
+  
+  /* Hover States */
+  --hover-purple: #B066E6;
+  --hover-pink: #E65C94;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  font-family: 'Montserrat', system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-family: 'Poppins', system-ui, sans-serif;
+  line-height: 1.25;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--accent-purple);
+}
+
+/* Letter-by-letter fade in animation */
+@keyframes fadeInLetter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-letter {
+  animation: fadeInLetter 0.3s ease-out;
+}
+
+/* Hero overlay fade animation - 2s linear */
+@keyframes heroOverlayFade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-hero-overlay {
+  animation: heroOverlayFade 2s linear forwards;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
