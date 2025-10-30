@@ -7,6 +7,13 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Autoplay } from 'swiper/modules'
+import type { Swiper as SwiperType } from 'swiper'
+
+// Import Swiper styles
+import 'swiper/css'
+import 'swiper/css/navigation'
 
 interface Album {
   id: string
@@ -33,6 +40,7 @@ export default function ReleasesCarousel({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const [itemsPerView, setItemsPerView] = useState(6)
+  const [swiperInstance, setSwiperInstance] = useState<SwiperType | null>(null)
   const SLIDE_AMOUNT = 5 // Always slide by 5 cards
 
   useEffect(() => {
@@ -64,10 +72,12 @@ export default function ReleasesCarousel({
         const nextIndex = prev + SLIDE_AMOUNT
         return nextIndex >= maxIndex ? 0 : nextIndex
       })
+      // Also update Swiper
+      swiperInstance?.slideNext()
     }, autoPlayInterval)
 
     return () => clearInterval(interval)
-  }, [autoPlay, autoPlayInterval, isHovered, albums?.length, itemsPerView])
+  }, [autoPlay, autoPlayInterval, isHovered, albums?.length, itemsPerView, swiperInstance])
 
   const goToNext = () => {
     if (!albums) return
@@ -76,6 +86,7 @@ export default function ReleasesCarousel({
       const nextIndex = prev + SLIDE_AMOUNT
       return nextIndex >= maxIndex ? 0 : nextIndex
     })
+    swiperInstance?.slideNext()
   }
 
   const goToPrevious = () => {
@@ -85,6 +96,7 @@ export default function ReleasesCarousel({
       const nextIndex = prev - SLIDE_AMOUNT
       return nextIndex < 0 ? maxIndex : nextIndex
     })
+    swiperInstance?.slidePrev()
   }
 
   // Don't render the section at all if no albums
@@ -115,59 +127,74 @@ export default function ReleasesCarousel({
             onMouseEnter={() => setIsHovered(true)} 
             onMouseLeave={() => setIsHovered(false)}
           >
-            <div className="overflow-hidden">
-              <div 
-                className="flex gap-4 transition-transform duration-500 ease-in-out"
-                style={{ 
-                  transform: `translateX(-${(currentIndex / albums.length) * 100}%)`,
-                  width: `${albums.length * (100 / itemsPerView)}%`
-                }}
-              >
-                {albums.map((album, index) => (
-                  <div
-                    key={album.id}
-                    className="flex-shrink-0"
-                    style={{ 
-                      width: `calc(${100 / albums.length}% - ${16 * (albums.length - 1) / albums.length}px)`,
-                      maxWidth: '200px'
-                    }}
-                  >
-                    <a href={album.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="group block">
-                      <div className="bg-bg-secondary rounded-lg overflow-hidden hover:bg-bg-elevated transition-all duration-300 hover:scale-105">
-                        <div className="aspect-square relative">
-                          {album.images[0] ? (
-                            <Image
-                              src={album.images[0].url}
-                              alt={album.name}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 200px"
-                              loading={index < 6 ? 'eager' : 'lazy'}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-bg-elevated flex items-center justify-center">
-                              <span className="text-text-tertiary text-sm">No Image</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="p-3">
-                          <h3 className="text-text-primary font-medium text-sm line-clamp-2 mb-1 group-hover:text-accent-purple transition-colors">
-                            {album.name}
-                          </h3>
-                          <p className="text-text-tertiary text-xs line-clamp-1">
-                            {album.artists.map(a => a.name).join(', ')}
-                          </p>
-                          <p className="text-text-tertiary text-xs mt-1">
-                            {album.total_tracks} {album.total_tracks === 1 ? 'track' : 'tracks'}
-                          </p>
-                        </div>
+            {/* Swiper wrapper - adds touch/swipe support */}
+            <Swiper
+              modules={[Navigation, Autoplay]}
+              spaceBetween={16}
+              slidesPerView={2}
+              slidesPerGroup={2}
+              speed={500}
+              loop={albums.length > 6}
+              autoplay={false} // We handle autoplay manually above
+              breakpoints={{
+                640: {
+                  slidesPerView: 3,
+                  slidesPerGroup: 3,
+                },
+                768: {
+                  slidesPerView: 4,
+                  slidesPerGroup: 4,
+                },
+                1024: {
+                  slidesPerView: 5,
+                  slidesPerGroup: 5,
+                },
+                1280: {
+                  slidesPerView: 6,
+                  slidesPerGroup: 5,
+                }
+              }}
+              onSwiper={setSwiperInstance}
+              onSlideChange={(swiper) => setCurrentIndex(swiper.realIndex)}
+              className="releases-swiper"
+            >
+              {albums.map((album, index) => (
+                <SwiperSlide key={album.id}>
+                  <a href={album.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="group block">
+                    <div className="bg-bg-secondary rounded-lg overflow-hidden hover:bg-bg-elevated transition-all duration-300 hover:scale-105">
+                      <div className="aspect-square relative">
+                        {album.images[0] ? (
+                          <Image
+                            src={album.images[0].url}
+                            alt={album.name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 200px"
+                            loading={index < 6 ? 'eager' : 'lazy'}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-bg-elevated flex items-center justify-center">
+                            <span className="text-text-tertiary text-sm">No Image</span>
+                          </div>
+                        )}
                       </div>
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
+                      
+                      <div className="p-3">
+                        <h3 className="text-text-primary font-medium text-sm line-clamp-2 mb-1 group-hover:text-accent-purple transition-colors">
+                          {album.name}
+                        </h3>
+                        <p className="text-text-tertiary text-xs line-clamp-1">
+                          {album.artists.map(a => a.name).join(', ')}
+                        </p>
+                        <p className="text-text-tertiary text-xs mt-1">
+                          {album.total_tracks} {album.total_tracks === 1 ? 'track' : 'tracks'}
+                        </p>
+                      </div>
+                    </div>
+                  </a>
+                </SwiperSlide>
+              ))}
+            </Swiper>
 
             {/* Navigation Arrows */}
             {showNavigation && (

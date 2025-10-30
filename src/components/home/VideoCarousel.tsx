@@ -8,6 +8,15 @@ import Image from 'next/image'
 import { YouTubeVideo } from '@/types/youtube.types'
 import { ChevronLeft, ChevronRight, Play, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Autoplay, EffectFade, Thumbs } from 'swiper/modules'
+import type { Swiper as SwiperType } from 'swiper'
+
+// Import Swiper styles
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/effect-fade'
+import 'swiper/css/thumbs'
 
 interface VideoCarouselProps {
   videos: YouTubeVideo[]
@@ -22,27 +31,33 @@ export default function VideoCarousel({
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
+  const [swiperInstance, setSwiperInstance] = useState<SwiperType | null>(null)
+  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null)
 
   useEffect(() => {
     if (!autoPlay || isHovered || videos.length <= 1) return
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % videos.length)
+      swiperInstance?.slideNext()
     }, autoPlayInterval)
 
     return () => clearInterval(interval)
-  }, [autoPlay, autoPlayInterval, isHovered, videos.length])
+  }, [autoPlay, autoPlayInterval, isHovered, videos.length, swiperInstance])
 
   const goToNext = () => {
     setCurrentIndex((prev) => (prev + 1) % videos.length)
+    swiperInstance?.slideNext()
   }
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + videos.length) % videos.length)
+    swiperInstance?.slidePrev()
   }
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index)
+    swiperInstance?.slideTo(index)
   }
 
   if (videos.length === 0) {
@@ -76,11 +91,18 @@ export default function VideoCarousel({
           >
             {/* Carousel container with sliding animation */}
             <div className="overflow-hidden rounded-2xl">
-              <div 
-                className="flex transition-transform duration-700 ease-in-out"
-                style={{ 
-                  transform: `translateX(-${currentIndex * 100}%)`
-                }}
+              <Swiper
+                modules={[Navigation, Autoplay, EffectFade, Thumbs]}
+                spaceBetween={0}
+                slidesPerView={1}
+                effect="fade"
+                speed={700}
+                loop={videos.length > 1}
+                autoplay={false} // We handle autoplay manually above
+                thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+                onSwiper={setSwiperInstance}
+                onSlideChange={(swiper) => setCurrentIndex(swiper.realIndex)}
+                className="video-main-swiper"
               >
                 {videos.map((video, index) => {
                   const thumbnail = video.snippet.thumbnails.maxres || 
@@ -89,11 +111,8 @@ export default function VideoCarousel({
                   const videoUrl = `https://www.youtube.com/watch?v=${video.id}`
 
                   return (
-                    <div 
-                      key={video.id}
-                      className="flex-shrink-0 w-full"
-                    >
-                      <div className="relative aspect-video bg-[var(--bg-elevated)] group">
+                    <SwiperSlide key={video.id}>
+                      <div className="relative aspect-video bg-[var(--bg-elevated)] group/slide">
                         <Image
                           src={thumbnail.url}
                           alt={video.snippet.title}
@@ -102,10 +121,10 @@ export default function VideoCarousel({
                           priority={index === 0}
                         />
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80 group-hover/slide:opacity-90 transition-opacity"></div>
 
                         <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center z-10">
-                          <div className="bg-[var(--accent-purple)] rounded-full p-6 transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                          <div className="bg-[var(--accent-purple)] rounded-full p-6 transform group-hover/slide:scale-110 transition-transform duration-300 shadow-lg">
                             <Play className="w-12 h-12 text-white fill-white" />
                           </div>
                         </a>
@@ -123,7 +142,7 @@ export default function VideoCarousel({
                             {video.statistics && (
                               <div className="flex items-center gap-6 text-sm text-gray-300 mb-4">
                                 <span>{parseInt(video.statistics.viewCount).toLocaleString()} views</span>
-                                <span>â€¢</span>
+                                <span>•</span>
                                 <span>{parseInt(video.statistics.likeCount).toLocaleString()} likes</span>
                               </div>
                             )}
@@ -135,10 +154,10 @@ export default function VideoCarousel({
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </SwiperSlide>
                   )
                 })}
-              </div>
+              </Swiper>
             </div>
 
             {/* Navigation Arrows */}
@@ -165,28 +184,53 @@ export default function VideoCarousel({
           {/* Thumbnail Navigation */}
           {videos.length > 1 && (
             <div className="flex justify-center items-center gap-3 mt-6">
-              {videos.map((video, index) => (
-                <button 
-                  key={video.id} 
-                  onClick={() => goToSlide(index)} 
-                  className={`group relative transition-all duration-300 ${
-                    index === currentIndex ? 'w-24 h-24' : 'w-16 h-16 opacity-50 hover:opacity-100'
-                  }`} 
-                  aria-label={`Go to video ${index + 1}`}
-                >
-                  <Image
-                    src={video.snippet.thumbnails.default.url}
-                    alt={video.snippet.title}
-                    fill
-                    className={`object-cover rounded-lg ${
-                      index === currentIndex ? 'ring-2 ring-[var(--accent-purple)]' : ''
-                    }`}
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <Play className="w-6 h-6 text-white fill-white" />
-                  </div>
-                </button>
-              ))}
+              {/* Use Swiper for thumbnail navigation too */}
+              <Swiper
+                modules={[Thumbs]}
+                spaceBetween={12}
+                slidesPerView={videos.length < 3 ? videos.length : 3}
+                watchSlidesProgress
+                onSwiper={setThumbsSwiper}
+                breakpoints={{
+                  640: {
+                    slidesPerView: Math.min(videos.length, 4),
+                  },
+                  768: {
+                    slidesPerView: Math.min(videos.length, 5),
+                  },
+                  1024: {
+                    slidesPerView: Math.min(videos.length, 6),
+                  }
+                }}
+                className="video-thumbs-swiper w-full max-w-3xl"
+              >
+                {videos.map((video, index) => (
+                  <SwiperSlide key={`thumb-${video.id}`}>
+                    <button 
+                      onClick={() => goToSlide(index)} 
+                      className={`group/thumb relative transition-all duration-300 block w-full ${
+                        index === currentIndex ? 'ring-2 ring-[var(--accent-purple)]' : 'opacity-50 hover:opacity-100'
+                      }`}
+                      style={{
+                        height: index === currentIndex ? '96px' : '64px'
+                      }}
+                      aria-label={`Go to video ${index + 1}`}
+                    >
+                      <div className="relative w-full h-full rounded-lg overflow-hidden">
+                        <Image
+                          src={video.snippet.thumbnails.default.url}
+                          alt={video.snippet.title}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white fill-white" />
+                        </div>
+                      </div>
+                    </button>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
           )}
 
