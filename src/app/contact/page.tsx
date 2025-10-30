@@ -85,7 +85,7 @@ export default function ContactPage() {
     },
     {
       name: 'Discord',
-      url: 'https://discord.gg/eCZ3xbApAf',
+      url: 'https://discord.com/invite/TwtjMEGyz8',
       icon: 'https://ocfefvcylrzsjuhcqxlu.supabase.co/storage/v1/object/public/social-icons/discord.png'
     },
     {

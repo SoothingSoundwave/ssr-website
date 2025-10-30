@@ -4,7 +4,7 @@
 /* NauticalPrestige - Display Font for Main Heading */
 @font-face {
   font-family: 'NauticalPrestige';
-  src: url('/fonts/NauticalPrestige-KVVGD.woff2') format('woff2');
+  src: url('/fonts/NauticalPrestige.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
