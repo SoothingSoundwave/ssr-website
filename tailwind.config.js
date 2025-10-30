@@ -43,6 +43,7 @@ module.exports = {
         sans: ['Montserrat', 'system-ui', 'sans-serif'],
         heading: ['Poppins', 'system-ui', 'sans-serif'],
         display: ['NauticalPrestige', 'Georgia', 'serif'],
+		hero: ['Hadenut', 'cursive'],
       },
       spacing: {
         '18': '4.5rem',
