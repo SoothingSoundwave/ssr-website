@@ -109,8 +109,6 @@ export default function ReleasesPage() {
     }))
   }
 
-  const totalAlbums = groupedAlbums.reduce((sum, group) => sum + group.albums.length, 0)
-
   if (loading) {
     return (
       <div className="min-h-screen bg-bg-primary pt-32 pb-20">
@@ -143,13 +141,9 @@ export default function ReleasesPage() {
     <div className="min-h-screen pt-32 pb-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-5xl font-heading font-bold text-text-primary mb-4 text-center">
+          <h1 className="text-5xl font-heading font-bold text-text-primary mb-12 text-center">
             Our Releases
           </h1>
-          
-          <p className="text-text-secondary text-lg text-center mb-12">
-            {totalAlbums} albums and singles from Soothing Soundwave Records
-          </p>
           
           <div className="space-y-12">
             {displayedGroups.map((group, groupIndex) => (
@@ -210,7 +204,7 @@ export default function ReleasesPage() {
           {!hasMore && displayedGroups.length > 0 && (
             <div className="mt-12 text-center">
               <p className="text-text-tertiary text-sm">
-                You've reached the end! All {totalAlbums} releases loaded.
+                You've reached the end!
               </p>
             </div>
           )}

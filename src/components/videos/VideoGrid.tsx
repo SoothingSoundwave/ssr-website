@@ -1,3 +1,6 @@
+// VideoGrid.tsx
+// Path: /src/components/videos/VideoGrid.tsx
+
 'use client'
 
 import { YouTubeVideo, YouTubePlaylist } from '@/types/youtube.types'
@@ -42,8 +45,8 @@ export default function VideoGrid({
           </p>
         </div>
 
-        {/* Grid - Radio cards are larger, max 2 per row on desktop */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Grid - Radio cards are full width for 16:9 aspect ratio */}
+        <div className="grid grid-cols-1 gap-8">
           {radioStreams.map((stream, index) => (
             <RadioCard
               key={stream.id}
