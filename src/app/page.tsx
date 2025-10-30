@@ -8,7 +8,7 @@ import PlaylistsCarousel from '@/components/home/PlaylistsCarousel'
 import VideoCarousel from '@/components/home/VideoCarousel'
 import MerchCarousel from '@/components/home/MerchCarousel'
 import { getChannelVideos } from '@/lib/api/youtube'
-import { getUserPlaylists } from '@/lib/api/spotify'
+import { getUserPlaylists, getPlaylistTracks } from '@/lib/api/spotify'
 
 export const metadata: Metadata = {
   title: 'Soothing Soundwave Records | Relaxing & Chill Music Label',
@@ -24,17 +24,37 @@ export const revalidate = 86400 // Revalidate once per day
 
 async function getReleasesFromPlaylist() {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/spotify/releases-playlist`,
-      { next: { revalidate: 86400 } }
-    )
+    const RELEASES_PLAYLIST_ID = '5jS1EBGYx3ul7hutxPtjix'
+    const data = await getPlaylistTracks(RELEASES_PLAYLIST_ID)
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch releases')
-    }
+    const albumsMap = new Map()
     
-    const data = await response.json()
-    return data.albums || []
+    data.items.forEach((item: any) => {
+      if (!item.track || !item.track.album) return
+      
+      const album = item.track.album
+      const albumId = album.id
+      
+      if (!albumsMap.has(albumId)) {
+        albumsMap.set(albumId, {
+          id: album.id,
+          name: album.name,
+          artists: album.artists,
+          images: album.images,
+          release_date: album.release_date,
+          total_tracks: album.total_tracks,
+          album_type: album.album_type,
+          external_urls: album.external_urls,
+          uri: album.uri,
+        })
+      }
+    })
+    
+    const albums = Array.from(albumsMap.values()).sort((a: any, b: any) => {
+      return new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
+    })
+    
+    return albums
   } catch (error) {
     console.error('Error fetching releases:', error)
     return []
